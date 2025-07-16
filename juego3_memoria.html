@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Minijuego 3: Puzzle Romántico</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0d0d0d;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 30px;
+      font-size: 28px;
+    }
+    #tablero {
+      display: none; /* Por defecto, oculto hasta que se inicia */
+      margin: 30px auto;
+      width: 320px;
+      display: grid;
+      grid-template-columns: repeat(4, 70px);
+      grid-gap: 10px;
+      justify-content: center;
+    }
+    .carta {
+      background-color: #00ffff;
+      border-radius: 8px;
+      font-size: 28px;
+      cursor: pointer;
+      padding: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 70px; /* Asegurar que todas las cartas tengan la misma altura */
+      transition: background-color 0.2s ease;
+    }
+    .carta:hover {
+        background-color: #00e0e0;
+    }
+    #ganaste, #regaloFinal, #mensajeFinal {
+      display: none;
+      margin-top: 30px;
+    }
+    button {
+      background-color: #00ffcc;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #00cccc;
+    }
+    #volverMenuPrincipal {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        background: #ff66cc;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.3s ease;
+    }
+    #volverMenuPrincipal:hover {
+        background-color: #e0529e;
+    }
+    img {
+      border-radius: 12px;
+      max-width: 90%;
+      box-shadow: 0 0 20px #ff66cc;
+      margin-top: 20px;
+    }
+    /* Estilos para ocultar el botón de retroceder cuando no sea necesario */
+    #volver.hidden {
+        display: none;
+    }
+  </style>
+</head>
+<body>
+  <audio id="backgroundMusic" loop>
+      <source src="https://www.chosic.com/wp-content/uploads/2022/02/lofi-study-112191.mp3" type="audio/mpeg">
+      Tu navegador no soporta el elemento de audio.
+  </audio>
+
+  <button id="volverMenuPrincipal" onclick="window.location.href='index.html'">🏡 Menú Principal</button>
+  <button id="volver" onclick="retrocederPaso()" style="display:none;">⏪ Retroceder</button>
+
+
+  <h1>Minijuego 3: Puzzle Romántico 🧩❤️</h1>
+
+  <div id="tablero"></div>
+
+  <div id="ganaste">
+    <button onclick="mostrarRegaloFinal()">🎁 Lo lograste, ver tu regalo</button>
+  </div>
+
+  <div id="regaloFinal">
+    <h2>🎉 ¡Tu Último Regalo! 🎉</h2>
+    <img src="https://i.imgur.com/QpaqNbx.jpeg" alt="Regalo final">
+    <p>Gracias por completar esta aventura conmigo ❤️. Este es tu último regalo.</p>
+    <button onclick="mostrarMensajeFinal()">💌 Ver tu Mensaje Final</button>
+  </div>
+
+  <div id="mensajeFinal">
+    <h2>🎁 ¡Mensaje de Amor Especial! 🎁</h2>
+    <p>Mi amor, en este día tan especial,<br>
+    tu luz brilla más que el sol de verano.<br>
+    Un año más de risas y de sueños,<br>
+    de un amor que crece en cada plano.</p>
+
+    <p>Tus ojos, dos luceros que me guían,<br>
+    tu sonrisa, el regalo más preciado.<br>
+    En cada gesto, en cada melodía,<br>
+    mi corazón por ti está embelesado.</p>
+
+    <p>Que la alegría inunde tu camino,<br>
+    que cada anhelo se haga realidad.<br>
+    Hoy celebro el regalo de tenerte,<br>
+    mi amor, mi vida, mi felicidad.</p>
+
+    <p>Feliz cumpleaños, mi dulce amor,<br>
+    que este día sea solo el comienzo<br>
+    de mil momentos llenos de pasión<br>
+    y un futuro eterno, sin tropiezos.</p>
+
+    <p style="margin-top: 30px; font-weight: bold; color: #ff69b4;">¡Te amo con todo mi corazón! 🥰</p>
+  </div>
+
+  <script>
+    // Script para que la música intente sonar automáticamente
+    document.addEventListener('DOMContentLoaded', () => {
+        const music = document.getElementById('backgroundMusic');
+        music.volume = 0.5; // Ajusta el volumen
+        music.play().catch(error => {
+            console.log('Autoplay blocked. User interaction required for music.');
+            // Si el autoplay falla, escucha el primer clic o interacción en la página
+            document.addEventListener('click', () => {
+                music.play().catch(e => console.log('Music play error on click:', e));
+            }, { once: true });
+            document.addEventListener('keydown', () => {
+                music.play().catch(e => console.log('Music play error on keydown:', e));
+            }, { once: true });
+        });
+    });
+
+
+    const emojis = ['💘','😈','🎉','😘','😍','💘','😈','🎉','😘','😍','🌟','🌈','🌟','🌈','🚀','🚀']; // Ajustado para 16 elementos
+    let mezcla = [...emojis].sort(() => Math.random() - 0.5);
+    let tablero = document.getElementById("tablero");
+    let seleccion = [];
+    let cartas = [];
+    let paresEncontrados = 0;
+    const totalPares = emojis.length / 2; // Asegurarse que el total de pares es correcto
+
+    const volverBtn = document.getElementById("volver");
+
+    function crearTablero() {
+      tablero.innerHTML = ''; // Limpiar tablero por si se reinicia
+      cartas = []; // Limpiar array de cartas
+      seleccion = [];
+      paresEncontrados = 0;
+      mezcla = [...emojis].sort(() => Math.random() - 0.5); // Mezclar de nuevo
+
+      mezcla.forEach((emoji, i) => {
+        let div = document.createElement("div");
+        div.classList.add("carta");
+        div.dataset.index = i;
+        div.textContent = "❓";
+        div.onclick = () => voltear(i);
+        tablero.appendChild(div);
+        cartas.push(div);
+      });
+      tablero.style.display = "grid"; // Mostrar tablero al inicio
+      document.getElementById("ganaste").style.display = "none";
+      document.getElementById("regaloFinal").style.display = "none";
+      document.getElementById("mensajeFinal").style.display = "none";
+    }
+
+    function voltear(i) {
+      if (seleccion.length < 2 && cartas[i].textContent === "❓") { // Asegurarse de no voltear cartas ya volteadas
+        cartas[i].textContent = mezcla[i];
+        seleccion.push(i);
+        if (seleccion.length === 2) {
+          setTimeout(verificar, 700); // Dar un poco más de tiempo para ver las cartas
+        }
+      }
+    }
+
+    function verificar() {
+      let [a, b] = seleccion;
+      if (mezcla[a] === mezcla[b]) {
+        cartas[a].style.visibility = "hidden";
+        cartas[b].style.visibility = "hidden";
+        paresEncontrados++;
+        if (paresEncontrados === totalPares) {
+          document.getElementById("ganaste").style.display = "block";
+          tablero.style.display = "none"; // Ocultar el tablero al ganar
+          volverBtn.style.display = "none"; // Ocultar botón retroceder al ganar
+        }
+      } else {
+        cartas[a].textContent = "❓";
+        cartas[b].textContent = "❓";
+      }
+      seleccion = [];
+    }
+
+    function mostrarRegaloFinal() {
+      tablero.style.display = "none";
+      document.getElementById("ganaste").style.display = "none";
+      document.getElementById("regaloFinal").style.display = "block";
+      volverBtn.style.display = "inline-block"; // Mostrar botón retroceder
+    }
+
+    function mostrarMensajeFinal() {
+      document.getElementById("regaloFinal").style.display = "none";
+      document.getElementById("mensajeFinal").style.display = "block";
+      volverBtn.style.display = "inline-block"; // Mostrar botón retroceder
+    }
+
+    function retrocederPaso() {
+      if (document.getElementById("mensajeFinal").style.display === "block") {
+        document.getElementById("mensajeFinal").style.display = "none";
+        document.getElementById("regaloFinal").style.display = "block";
+      } else if (document.getElementById("regaloFinal").style.display === "block") {
+        document.getElementById("regaloFinal").style.display = "none";
+        // Si el tablero ya está oculto por ganar, no lo vuelvas a mostrar aquí.
+        // Asumiendo que volverás al estado de "ganaste" para poder volver a jugar si quiere.
+        document.getElementById("ganaste").style.display = "block";
+        volverBtn.style.display = "none"; // Ocultar retroceder si vuelves a la pantalla de ganar
+      }
+    }
+
+    // Inicia juego automáticamente al cargar la página
+    window.onload = crearTablero;
+  </script>
+</body>
+</html>

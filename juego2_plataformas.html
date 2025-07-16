@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Minijuego 2: Plataforma de Amor</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #00ffcc;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+    }
+
+    canvas {
+      background-color: #111;
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #00ffcc;
+    }
+
+    button {
+      background-color: #00ffcc;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      font-weight: bold;
+      border-radius: 5px;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease; /* Transición para el hover */
+    }
+    button:hover {
+        background-color: #00cccc; /* Color al pasar el ratón */
+    }
+
+    img {
+      max-width: 250px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00ffcc;
+      display: none;
+      margin-top: 20px;
+    }
+
+    #mensajeExtra {
+      display: none;
+      color: #ff66cc;
+      font-style: italic;
+      max-width: 90%;
+      margin: 10px auto;
+    }
+
+    #nextJuego3 {
+      display: none;
+    }
+
+    #recompensa {
+      display: none;
+      margin-top: 30px;
+    }
+    #volverMenuPrincipal {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        background: #ff66cc;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.3s ease;
+    }
+    #volverMenuPrincipal:hover {
+        background-color: #e0529e;
+    }
+  </style>
+</head>
+<body>
+  <audio id="backgroundMusic" loop>
+      <source src="https://www.chosic.com/wp-content/uploads/2021/07/Sunny-by-Lesfm.mp3" type="audio/mpeg">
+      Tu navegador no soporta el elemento de audio.
+  </audio>
+
+  <button id="volverMenuPrincipal" onclick="window.location.href='index.html'">🏡 Menú Principal</button>
+
+  <h1 id="tituloJuego2">Minijuego 2: Plataforma de amor 🕹️</h1>
+  <canvas id="plataformaCanvas" width="300" height="400"></canvas>
+  <p id="altura">Altura: 0m / 2000m</p>
+
+  <button id="reiniciarJuego2" onclick="iniciarJuego2()" style="display:none;">🔁 Volver a intentar</button>
+
+  <button id="mensajePlataforma" style="display:none;" onclick="mostrarPremio2()">🎉 ¡Felicidades! Ver tu regalo 🎁</button>
+
+  <div id="recompensa">
+    <img id="imgPlataforma" src="https://i.imgur.com/66o7cwB.jpeg" alt="Imagen premio 2">
+    <p id="mensajeExtra">
+      Mi amor, llegaste tan alto como nuestro amor 🌟.<br>
+      Esta aventura solo demuestra lo mucho que vales. ¡Te amo! 💖
+    </p>
+    <button id="nextJuego3" onclick="window.location.href='juego3_memoria.html'">✅ Nivel final: Puzzle del Corazón</button>
+  </div>
+
+  <script>
+    // Script para que la música intente sonar automáticamente
+    document.addEventListener('DOMContentLoaded', () => {
+        const music = document.getElementById('backgroundMusic');
+        music.volume = 0.5; // Ajusta el volumen
+        music.play().catch(error => {
+            console.log('Autoplay blocked. User interaction required for music.');
+            // Si el autoplay falla, escucha el primer clic o interacción en la página
+            document.addEventListener('click', () => {
+                music.play().catch(e => console.log('Music play error on click:', e));
+            }, { once: true });
+            document.addEventListener('keydown', () => {
+                music.play().catch(e => console.log('Music play error on keydown:', e));
+            }, { once: true });
+        });
+    });
+
+    const canvas2 = document.getElementById("plataformaCanvas");
+    const ctx2 = canvas2.getContext("2d");
+
+    const jugador = {
+      x: 140,
+      y: 360,
+      width: 20,
+      height: 20,
+      vy: 0,
+      grounded: false,
+      velocidad: 2.5,
+      saltar: -8
+    };
+
+    let plataformas = [];
+    let teclas = {};
+    let gravedad = 0.4;
+    let scroll = 0;
+    let terminado = false;
+
+    document.addEventListener("keydown", e => teclas[e.key] = true);
+    document.addEventListener("keyup", e => teclas[e.key] = false);
+
+    function generarPlataformas() {
+      plataformas = [];
+      plataformas.push({ x: 130, y: 380, width: 60, height: 10 }); // Plataforma inicial
+      for (let i = 1; i < 80; i++) { // Generar 79 plataformas más
+        plataformas.push({
+          x: Math.random() * 220 + 20, // Ajuste para que no salgan tan al borde
+          y: 380 - i * 50, // Separación vertical de las plataformas
+          width: 60,
+          height: 10
+        });
+      }
+    }
+
+    function detectarColision(a, b) {
+      return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+      );
+    }
+
+    function moverJugador() {
+      if (teclas["ArrowLeft"]) jugador.x -= jugador.velocidad;
+      if (teclas["ArrowRight"]) jugador.x += jugador.velocidad;
+      if ((teclas[" "] || teclas["ArrowUp"]) && jugador.grounded) {
+        jugador.vy = jugador.saltar;
+        jugador.grounded = false;
+      }
+
+      // Limitar jugador a los bordes del canvas
+      if (jugador.x < 0) jugador.x = 0;
+      if (jugador.x + jugador.width > canvas2.width) jugador.x = canvas2.width - jugador.width;
+    }
+
+    function aplicarFisica() {
+      jugador.vy += gravedad;
+      jugador.y += jugador.vy;
+      jugador.grounded = false;
+
+      plataformas.forEach(p => {
+        if (detectarColision(jugador, p) && jugador.vy >= 0) {
+          // Si el jugador cae sobre la plataforma
+          jugador.y = p.y - jugador.height;
+          jugador.vy = 0;
+          jugador.grounded = true;
+        }
+      });
+
+      // Lógica de scroll cuando el jugador sube
+      if (jugador.y < canvas2.height / 2 && jugador.vy < 0) { // Si el jugador está en la mitad superior y subiendo
+          let dy = canvas2.height / 2 - jugador.y;
+          jugador.y = canvas2.height / 2; // Mantener al jugador en el centro vertical
+          plataformas.forEach(p => p.y += dy);
+          scroll += dy;
+      }
+
+      if (jugador.y > canvas2.height) { // Si el jugador cae por debajo de la pantalla
+        perderJuego2();
+      }
+    }
+
+    function dibujarJuego2() {
+      ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+      ctx2.fillStyle = "#00ff99"; // Color de las plataformas
+      plataformas.forEach(p => ctx2.fillRect(p.x, p.y, p.width, p.height));
+
+      ctx2.fillStyle = "#00ffff"; // Color del jugador
+      ctx2.fillRect(jugador.x, jugador.y, jugador.width, jugador.height);
+
+      document.getElementById("altura").innerText = "Altura: " + Math.floor(scroll) + "m / 2000m";
+
+      if (scroll >= 2000 && !terminado) {
+        terminado = true;
+        document.getElementById("mensajePlataforma").style.display = "inline-block";
+      }
+    }
+
+    function bucleJuego2() {
+      if (!terminado) {
+        moverJugador();
+        aplicarFisica();
+        dibujarJuego2();
+        requestAnimationFrame(bucleJuego2);
+      }
+    }
+
+    function iniciarJuego2() {
+      jugador.x = 140;
+      jugador.y = 360;
+      jugador.vy = 0;
+      scroll = 0;
+      terminado = false;
+      generarPlataformas();
+
+      document.getElementById("mensajePlataforma").style.display = "none";
+      document.getElementById("imgPlataforma").style.display = "none";
+      document.getElementById("mensajeExtra").style.display = "none";
+      document.getElementById("nextJuego3").style.display = "none";
+      document.getElementById("reiniciarJuego2").style.display = "none";
+      document.getElementById("recompensa").style.display = "none";
+
+      document.getElementById("plataformaCanvas").style.display = "block";
+      document.getElementById("altura").style.display = "block";
+      document.getElementById("tituloJuego2").style.display = "block";
+
+      bucleJuego2();
+    }
+
+    function perderJuego2() {
+      terminado = true;
+      document.getElementById("reiniciarJuego2").style.display = "inline-block";
+    }
+
+    function mostrarPremio2() {
+      document.getElementById("plataformaCanvas").style.display = "none";
+      document.getElementById("altura").style.display = "none";
+      document.getElementById("mensajePlataforma").style.display = "none";
+      document.getElementById("tituloJuego2").style.display = "none";
+      document.getElementById("recompensa").style.display = "block";
+      document.getElementById("imgPlataforma").style.display = "block";
+      document.getElementById("mensajeExtra").style.display = "block";
+      document.getElementById("nextJuego3").style.display = "inline-block";
+    }
+
+    window.onload = iniciarJuego2; // Para que el juego empiece automáticamente al cargar la página
+  </script>
+</body>
+</html>

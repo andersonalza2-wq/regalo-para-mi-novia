@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Minijuego 1: Nave del Amor</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      color: #00ffcc;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+    }
+
+    canvas {
+      background-color: #111;
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #00ffcc;
+    }
+
+    #pantallaInicio, #ganaste, #perdiste, #regalo {
+      display: none;
+      margin-top: 30px;
+    }
+
+    #pantallaInicio {
+      display: block;
+      padding: 50px;
+    }
+
+    #contador {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    button {
+      padding: 10px 25px;
+      background-color: #00ffcc;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s ease; /* Transición para el hover */
+    }
+    button:hover {
+        background-color: #00cccc; /* Color al pasar el ratón */
+    }
+
+
+    img {
+      margin-top: 20px;
+      max-width: 80%;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #ff66cc;
+    }
+
+    p {
+      font-size: 18px;
+      color: #fff;
+    }
+    #volverMenuPrincipal {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        background: #ff66cc;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.3s ease;
+    }
+    #volverMenuPrincipal:hover {
+        background-color: #e0529e;
+    }
+  </style>
+</head>
+<body>
+  <button id="volverMenuPrincipal" onclick="window.location.href='index.html'">🏡 Menú Principal</button>
+
+
+  <div id="pantallaInicio">
+    <h1>🎂 Para mi amor 🎂</h1>
+    <p>Feliz cumpleaños, amor mío. Prepara tu corazón para una aventura romántica con tres desafíos mágicos. ❤️</p>
+    <button onclick="iniciarJuego()">🎮 Jugar</button>
+  </div>
+
+  <p id="contador" style="display:none;">Imágenes eliminadas: 0 / 100</p>
+  <canvas id="juego" width="400" height="600" style="display:none;"></canvas>
+
+  <div id="ganaste">
+    <button onclick="mostrarRegalo()">🎁 Ver tu regalo</button>
+  </div>
+
+  <div id="perdiste">
+    <p>¡Oh no! 😢 Te extrañaré por siempre...</p>
+    <button onclick="reiniciarJuego()">🔁 Volver a intentar</button>
+  </div>
+
+  <div id="regalo">
+    <h2>🎉 ¡Regalo del Primer Nivel! 🎉</h2>
+    <img src="https://i.imgur.com/YwZVMEv.jpeg" alt="Regalo 1" />
+    <p>Superaste el primer desafío con valentía ❤️ ¡Eres la mejor!</p>
+    <button onclick="window.location.href='juego2_plataformas.html'">➡️ Siguiente Nivel: La Escalada del Amor</button>
+  </div>
+
+  <audio id="backgroundMusic" loop>
+      <source src="https://www.chosic.com/wp-content/uploads/2021/07/Arcade-Beat-by-Kevin-MacLeod.mp3" type="audio/mpeg">
+      Tu navegador no soporta el elemento de audio.
+  </audio>
+
+  <script>
+    // Script para que la música intente sonar automáticamente
+    document.addEventListener('DOMContentLoaded', () => {
+        const music = document.getElementById('backgroundMusic');
+        music.volume = 0.5; // Ajusta el volumen
+        music.play().catch(error => {
+            console.log('Autoplay blocked. User interaction required for music.');
+            // Si el autoplay falla, escucha el primer clic o interacción en la página
+            document.addEventListener('click', () => {
+                music.play().catch(e => console.log('Music play error on click:', e));
+            }, { once: true });
+            document.addEventListener('keydown', () => {
+                music.play().catch(e => console.log('Music play error on keydown:', e));
+            }, { once: true });
+        });
+    });
+
+    const canvas = document.getElementById("juego");
+    const ctx = canvas.getContext("2d");
+
+    let nave;
+    let disparos;
+    let enemigos;
+    let teclas = {};
+    let score;
+    let jugando;
+    const maxScore = 100;
+    const contador = document.getElementById("contador");
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === " " && !teclas[" "]) { // Solo dispara una vez por pulsación
+            if (jugando) disparar();
+        }
+        teclas[e.key] = true;
+    });
+    document.addEventListener("keyup", (e) => teclas[e.key] = false);
+
+    function iniciarJuego() {
+      document.getElementById("pantallaInicio").style.display = "none";
+      document.getElementById("ganaste").style.display = "none";
+      document.getElementById("perdiste").style.display = "none";
+      document.getElementById("regalo").style.display = "none";
+      canvas.style.display = "block";
+      contador.style.display = "block";
+      nave = { x: 180, y: 550, width: 40, height: 40 };
+      disparos = [];
+      enemigos = [];
+      score = 0;
+      jugando = true;
+      contador.textContent = `Imágenes eliminadas: 0 / ${maxScore}`;
+      loop();
+    }
+
+    function reiniciarJuego() {
+      iniciarJuego();
+    }
+
+    function disparar() {
+      disparos.push({ x: nave.x + 15, y: nave.y });
+    }
+
+    function crearEnemigo() {
+      if (!jugando) return; // No crear enemigos if el juego no está activo
+      const x = Math.random() * 360;
+      enemigos.push({ x, y: 0 });
+    }
+
+    function actualizar() {
+      if (!jugando) return;
+
+      if (teclas["ArrowLeft"] && nave.x > 0) nave.x -= 5;
+      if (teclas["ArrowRight"] && nave.x < 360) nave.x += 5;
+      // La lógica de disparo se movió al keydown para evitar disparos continuos al mantener
+      // if (teclas[" "] || teclas["z"]) disparar();
+
+      disparos.forEach((d) => d.y -= 10);
+      enemigos.forEach((e) => e.y += 4);
+
+      enemigos.forEach((e, ei) => {
+        if (e.y > 600) perder(); // Si un enemigo pasa, se pierde
+        if (colision(nave, e)) perder(); // Si colisiona con la nave, se pierde
+        disparos.forEach((d, di) => {
+          if (colision(d, e)) {
+            // Eliminar enemigo y disparo
+            enemigos.splice(ei, 1);
+            disparos.splice(di, 1);
+            score++;
+            contador.textContent = `Imágenes eliminadas: ${score} / ${maxScore}`;
+            if (score >= maxScore) ganar();
+          }
+        });
+      });
+
+      // Filtrar disparos y enemigos fuera de pantalla
+      disparos = disparos.filter(d => d.y > 0);
+      enemigos = enemigos.filter(e => e.y <= 600);
+    }
+
+    function colision(a, b) {
+      return (
+        a.x < b.x + 30 &&
+        a.x + 30 > b.x &&
+        a.y < b.y + 30 &&
+        a.y + 30 > b.y
+      );
+    }
+
+    function dibujar() {
+      ctx.clearRect(0, 0, 400, 600);
+      ctx.fillStyle = "#00ffcc";
+      ctx.fillRect(nave.x, nave.y, nave.width, nave.height);
+
+      ctx.fillStyle = "#fff";
+      disparos.forEach(d => ctx.fillRect(d.x, d.y, 5, 10));
+
+      ctx.fillStyle = "#ff66cc";
+      enemigos.forEach(e => {
+        ctx.beginPath();
+        ctx.arc(e.x + 15, e.y + 15, 15, 0, Math.PI * 2); // Ajustar centro para que la colisión sea más precisa
+        ctx.fill();
+      });
+    }
+
+    function loop() {
+      actualizar();
+      dibujar();
+      if (jugando) requestAnimationFrame(loop);
+    }
+
+    function ganar() {
+      jugando = false;
+      document.getElementById("ganaste").style.display = "block";
+      canvas.style.display = "none";
+      contador.style.display = "none";
+    }
+
+    function perder() {
+      jugando = false;
+      document.getElementById("perdiste").style.display = "block";
+      canvas.style.display = "none";
+      contador.style.display = "none";
+    }
+
+    function mostrarRegalo() {
+      document.getElementById("ganaste").style.display = "none";
+      document.getElementById("regalo").style.display = "block";
+    }
+
+    // Asegúrate de que los enemigos solo se creen si el juego está activo
+    setInterval(() => {
+        if (jugando) crearEnemigo();
+    }, 500); // Frecuencia de aparición de enemigos
+  </script>
+</body>
+</html>

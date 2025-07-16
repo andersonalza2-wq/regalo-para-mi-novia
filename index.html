@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥳 ¡Un Regalo de Amor para Ti! 💖</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0a0a0a; /* Fondo oscuro */
+            color: #e0f7fa; /* Texto claro */
+            font-family: 'Georgia', serif; /* Una fuente más elegante */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            background-image: url('https://i.imgur.com/vHq8zM4.gif'); /* Un gif de fondo sutil si quieres */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .container {
+            background-color: rgba(10, 25, 41, 0.9); /* Azul oscuro semitransparente */
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.8), 0 0 60px rgba(0, 255, 255, 0.5); /* Sombras de color de amor y tecnología */
+            max-width: 700px;
+            width: 100%;
+            border: 2px solid #ff69b4; /* Borde rosa brillante */
+        }
+
+        h1 {
+            color: #ffccff; /* Rosa claro para el título */
+            font-size: 3.2em;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        p {
+            font-size: 1.4em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #d1c4e9; /* Un morado suave para el texto */
+        }
+
+        .game-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .game-button {
+            background-color: #ff69b4; /* Rosa intenso */
+            color: white;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5em;
+            cursor: pointer;
+            text-decoration: none; /* Para enlaces */
+            display: inline-block;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .game-button:hover {
+            background-color: #e0529e; /* Rosa más oscuro al pasar el ratón */
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 25px #ff69b4;
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .heart-emoji {
+            color: #ff69b4; /* Color del corazón */
+            font-size: 1.2em;
+            margin: 0 5px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.5em;
+            }
+            p {
+                font-size: 1.1em;
+            }
+            .game-button {
+                font-size: 1.2em;
+                padding: 15px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="backgroundMusic" loop>
+        <source src="https://www.chosic.com/wp-content/uploads/2021/07/Forest-Lullaby-by-Lesfm.mp3" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
+
+    <div class="container">
+        <h1>🥳 ¡Feliz Cumpleaños, Mi Amor! 💖</h1>
+        <p>
+            Para celebrar tu día especial, te he preparado una pequeña aventura llena de amor y desafíos.
+            Cada minijuego es un reflejo de lo mucho que te quiero y lo valioso/a que eres para mí.
+            <br><br>
+            ¡Prepárate para la diversión! <span class="heart-emoji">❤️</span>
+        </p>
+        <div class="game-buttons">
+            <a href="juego1.html" class="game-button">🌌 Desafío Cósmico del Amor (Nivel 1)</a>
+            <a href="juego2_plataformas.html" class="game-button">⛰️ La Escalada del Amor (Nivel 2)</a>
+            <a href="juego3_memoria.html" class="game-button">🧠 Puzzle del Corazón (Nivel Final)</a>
+        </div>
+        <p style="margin-top: 40px; font-size: 1em; color: #a0a0a0;">
+            Hecho con todo mi amor, especialmente para ti.
+        </p>
+    </div>
+
+    <script>
+        // Intenta reproducir la música automáticamente
+        const music = document.getElementById('backgroundMusic');
+        music.volume = 0.5; // Ajusta el volumen si es muy alto
+        music.play().catch(error => {
+            // Si el autoplay falla, escucha el primer clic o interacción del usuario
+            console.log('Autoplay blocked. User interaction required for music.');
+            document.addEventListener('click', () => {
+                music.play().catch(e => console.log('Music play error on click:', e));
+            }, { once: true });
+            document.addEventListener('keydown', () => {
+                music.play().catch(e => console.log('Music play error on keydown:', e));
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>
